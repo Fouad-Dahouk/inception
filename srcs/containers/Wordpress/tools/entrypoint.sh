@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
-# Set up wp-config.php
+# Setup wp-config.php if it doesn't exist
 if [ ! -f /var/www/html/wp-config.php ]; then
+    echo "Creating wp-config.php..."
     cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
 
     sed -i "s/database_name_here/${MYSQL_DATABASE}/" /var/www/html/wp-config.php
@@ -11,8 +12,8 @@ if [ ! -f /var/www/html/wp-config.php ]; then
     sed -i "s/localhost/mariadb/" /var/www/html/wp-config.php
 fi
 
-# Ensure correct permissions
+# Set permissions
 chown -R www-data:www-data /var/www/html
 
-# Start PHP-FPM in foreground
-exec php-fpm7.4 -F
+# Start PHP-FPM
+exec php-fpm -F

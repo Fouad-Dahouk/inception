@@ -13,28 +13,57 @@ services:
 
     networks:
       - inception
-
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
   wordpress:
-      build: ./containers/Wordpress
+    build: ./containers/Wordpress
 
-      container_name: wordpress
+    container_name: wordpress
 
-      restart: always
+    restart: always
 
-      env_file: .env
+    env_file: .env
 
-      ports:
+    ports:
         - "8080:80"
 
-      volumes:
+    volumes:
         - wordpress_data:/var/www/html
 
-      networks:
+    networks:
       - inception
     
-      depends_on:
+    depends_on:
       - mariadb
+
+  nginx:
+    build: ./containers/Nginx
+
+    container_name: nginx
+
+    restart: always
     
+    env_file: .env
+
+    ports:
+      - "443:443"
+    
+    volumes:
+      - wordpress_data:/var/www/html
+    
+    networks:
+      - inception
+    
+    depends_on:
+      - wordpress
+
+
+
 volumes:
   mariadb_data:
   wordpress_data:

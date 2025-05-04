@@ -1,15 +1,27 @@
 #!/bin/bash
 set -e
 
+# Check for required environment variables
+if [ -z "$MYSQL_DATABASE" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ] || [ -z "$MYSQL_ROOT_PASSWORD" ]; then
+    echo "Error: Required environment variables are not set (MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD)"
+    exit 1
+fi
+
+# Initialize MariaDB if the data directory is not already initialized
 if [ ! -d "/var/lib/mysql/mysql" ]; then
     echo "Initializing MariaDB data directory..."
     mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql > /dev/null
 
-    # Start MariaDB as mysql user temporarily
+    # Start MariaDB temporarily as mysql user
     mysqld_safe --datadir=/var/lib/mysql --user=mysql &
 
-    sleep 5
+    # Wait until MariaDB is fully initialized (using mysqladmin to ping)
+    until mysqladmin ping --silent; do
+        echo "Waiting for MariaDB to be ready..."
+        sleep 2
+    done
 
+    # Create database, user, and set privileges
     mysql -u root <<-EOSQL
         CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
         CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
@@ -18,6 +30,7 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
         FLUSH PRIVILEGES;
 EOSQL
 
+    # Shut down MariaDB temporarily
     mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
 fi
 

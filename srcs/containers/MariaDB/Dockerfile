@@ -12,11 +12,11 @@ RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
 RUN echo "[mysqld]\nsocket=/run/mysqld/mysqld.sock" >> /etc/mysql/my.cnf
 
 # Copy entrypoint script
-COPY ./tools/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+COPY ./tools/entrypoint.sh /tmp/entrypoint.sh
+RUN chmod +x /tmp/entrypoint.sh
 
 # Expose MySQL port
 EXPOSE 3306
 
 # Set entrypoint
-ENTRYPOINT ["entrypoint.sh"]
+ENTRYPOINT ["/tmp/entrypoint.sh"]

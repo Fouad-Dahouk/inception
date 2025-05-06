@@ -1,72 +1,71 @@
 services:
   mariadb:
     build: ./containers/MariaDB
-
     container_name: mariadb
-
     restart: always
-
     env_file: .env
-
+    expose:
+      - "3306"
     volumes:
       - mariadb_data:/var/lib/mysql
-
     networks:
       - inception
-    
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       interval: 10s
       timeout: 5s
       retries: 5
-    
+
   wordpress:
     build: ./containers/Wordpress
-
     container_name: wordpress
-
     restart: always
-
     env_file: .env
-
-    ports:
-        - "8080:80"
-
+    expose:
+      - "9000"
     volumes:
-        - wordpress_data:/var/www/html
-
+      - wordpress_data:/var/www/html
     networks:
       - inception
-    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
 
   nginx:
     build: ./containers/Nginx
-
     container_name: nginx
-
     restart: always
-    
     env_file: .env
-
     ports:
       - "443:443"
-    
     volumes:
       - wordpress_data:/var/www/html
-    
     networks:
       - inception
-    
     depends_on:
-      - wordpress
-
+      wordpress:
+        condition: service_healthy
 
 
 volumes:
   mariadb_data:
+    driver_opts:
+      type: none
+      device: /home/fdahouk/data/mariadb
+      o: bind
+
   wordpress_data:
+    driver_opts:
+      type: none
+      device: /home/fdahouk/data/wordpress
+      o: bind
 
 networks:
   inception:
+    driver: bridge

@@ -1,11 +1,4 @@
-#!/bin/bash
-set -e
-
-# Check for required environment variables
-if [ -z "$MYSQL_DATABASE" ] || [ -z "$MYSQL_USER" ] || [ -z "$MYSQL_PASSWORD" ] || [ -z "$MYSQL_ROOT_PASSWORD" ]; then
-    echo "Error: Required environment variables are not set (MYSQL_DATABASE, MYSQL_USER, MYSQL_PASSWORD, MYSQL_ROOT_PASSWORD)"
-    exit 1
-fi
+#!/bin/sh
 
 # Initialize MariaDB if the data directory is not already initialized
 if [ ! -d "/var/lib/mysql/mysql" ]; then

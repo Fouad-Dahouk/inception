@@ -5,18 +5,12 @@ RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y mariadb-server && \
     rm -rf /var/lib/apt/lists/*
 
-# Ensure the socket directory exists and has correct permissions
-RUN mkdir -p /run/mysqld && chown -R mysql:mysql /run/mysqld
-
-# Configure MariaDB to use the correct socket path
+# Only keep build-time config (remove directory creation)
 RUN echo "[mysqld]\nsocket=/run/mysqld/mysqld.sock" >> /etc/mysql/my.cnf
 
 # Copy entrypoint script
 COPY ./tools/entrypoint.sh /tmp/entrypoint.sh
 RUN chmod +x /tmp/entrypoint.sh
 
-# Expose MySQL port
 EXPOSE 3306
-
-# Set entrypoint
 ENTRYPOINT ["/tmp/entrypoint.sh"]

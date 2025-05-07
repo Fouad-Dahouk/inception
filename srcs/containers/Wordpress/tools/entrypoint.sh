@@ -22,7 +22,7 @@ until mysql -h mariadb -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e "SHOW DATABASES;" 
 done
 
 # Setup wp-config.php if it doesn't exist
-if [ ! -f /var/www/html/wp-config.php ]; then
+if [ ! -f "/var/www/html/wp-config.php" ]; then
     echo "Creating wp-config.php..."
     cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
 

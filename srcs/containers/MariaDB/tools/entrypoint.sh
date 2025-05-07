@@ -1,31 +1,33 @@
 #!/bin/sh
+set -e
 
-# Initialize MariaDB if the data directory is not already initialized
+# Create runtime directory (cleared on container restart)
+mkdir -p /run/mysqld
+chown -R mysql:mysql /run/mysqld
+
+# Initialize database if not exists
 if [ ! -d "/var/lib/mysql/mysql" ]; then
-    echo "Initializing MariaDB data directory..."
-    mariadb-install-db --user=mysql --basedir=/usr --datadir=/var/lib/mysql > /dev/null
+    mariadb-install-db --user=mysql --datadir=/var/lib/mysql > /dev/null
+    
+    # Start temporary server
+    mysqld --user=mysql --skip-networking &
+    
+    # Wait for socket creation
+    while [ ! -S /run/mysqld/mysqld.sock ]; do sleep 1; done
 
-    # Start MariaDB temporarily as mysql user
-    mysqld_safe --datadir=/var/lib/mysql --user=mysql &
-
-    # Wait until MariaDB is fully initialized (using mysqladmin to ping)
-    until mysqladmin ping --silent; do
-        echo "Waiting for MariaDB to be ready..."
-        sleep 2
-    done
-
-    # Create database, user, and set privileges
-    mysql -u root <<-EOSQL
-        CREATE DATABASE IF NOT EXISTS ${MYSQL_DATABASE};
-        CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';
-        GRANT ALL PRIVILEGES ON ${MYSQL_DATABASE}.* TO '${MYSQL_USER}'@'%';
-        ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}';
+    # Basic security setup
+    mysql <<-EOSQL
+        CREATE DATABASE ${DB_NAME:-mydatabase};
+        CREATE USER '${DB_USER:-user}'@'%' IDENTIFIED BY '${DB_PASSWORD:-password}';
+        GRANT ALL ON ${DB_NAME:-mydatabase}.* TO '${DB_USER:-user}'@'%';
+        ALTER USER 'root'@'localhost' IDENTIFIED BY '${ROOT_PASSWORD:-rootpass}';
         FLUSH PRIVILEGES;
 EOSQL
 
-    # Shut down MariaDB temporarily
-    mysqladmin -u root -p"${MYSQL_ROOT_PASSWORD}" shutdown
+    # Clean shutdown
+    killall -TERM mysqld
+    while [ -S /run/mysqld/mysqld.sock ]; do sleep 1; done
 fi
 
-# Start MariaDB as mysql user (required)
+# Start main process
 exec mysqld --user=mysql

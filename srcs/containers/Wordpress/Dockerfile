@@ -6,7 +6,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Ensure PHP-FPM listens on 0.0.0.0:9000
-RUN sed -i 's|^listen = .*|listen = 0.0.0.0:9000|' /etc/php/*/fpm/pool.d/www.conf
+RUN sed -i "s|listen = 127.0.0.1|listen = 0.0.0.0:9000|" /etc/php/*/fpm/pool.d/www.conf
 
 # Download and extract WordPress
 RUN curl -O https://wordpress.org/latest.tar.gz && \

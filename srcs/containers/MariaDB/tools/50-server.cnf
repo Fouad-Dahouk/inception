@@ -1,0 +1,20 @@
+[mysqld]
+user                    = mysql
+
+# Networking
+bind-address            = 0.0.0.0
+port                    = 3306
+socket                  = /run/mysqld/mysqld.sock
+
+# Paths
+datadir                 = /var/lib/mysql
+pid-file                = /run/mysqld/mysqld.pid
+log_error               = /var/log/mysql/error.log
+
+# Character Set
+character-set-server    = utf8mb4
+collation-server        = utf8mb4_unicode_ci
+
+# InnoDB
+innodb_buffer_pool_size = 256M
+innodb_file_per_table   = 1
